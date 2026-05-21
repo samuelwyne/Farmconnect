@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FarmConnect - Register</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 550px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.9;
+        }
+
+        .register-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .user-type-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .type-btn {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .type-btn.active {
+            border-color: #4CAF50;
+            background: #e8f5e9;
+            color: #4CAF50;
+        }
+
+        .type-btn.buyer.active {
+            border-color: #2196F3;
+            background: #e3f2fd;
+            color: #2196F3;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .subscription-preview {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .preview-amount {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .terms {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .register-btn {
+            width: 100%;
+            padding: 14px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .login-link {
+            text-align: center;
+            color: #666;
+        }
+
+        .login-link a {
+            color: #4CAF50;
+            text-decoration: none;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        @media (max-width: 480px) {
+            .register-card {
+                padding: 25px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌾 FarmConnect</h1>
+            <a href="index.html">← Back to Home</a>
+        </div>
+
+        <div class="register-card">
+            <div id="message" class="message"></div>
+
+            <div class="user-type-selector">
+                <button class="type-btn active" onclick="selectType('farmer')" id="farmerBtn">👨‍🌾 Farmer</button>
+                <button class="type-btn buyer" onclick="selectType('buyer')" id="buyerBtn">🛒 Buyer</button>
+            </div>
+
+            <form onsubmit="handleRegister(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstName">First Name</label>
+                        <input type="text" id="firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Last Name</label>
+                        <input type="text" id="lastName" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" placeholder="+256 XXX XXX XXX" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" minlength="6" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <input type="password" id="confirmPassword" minlength="6" required>
+                    </div>
+                </div>
+
+                <div class="subscription-preview">
+                    <strong>📅 Monthly Subscription: <span class="preview-amount">UGX 5,000/month</span></strong>
+                </div>
+
+                <div class="terms">
+                    <input type="checkbox" id="terms" required>
+                    <label for="terms">I agree to the Terms of Service</label>
+                </div>
+
+                <button type="submit" class="register-btn">Continue to Payment</button>
+
+                <div class="login-link">
+                    Already have an account? <a href="login.html">Login here</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let selectedType = 'farmer';
+
+        function selectType(type) {
+            selectedType = type;
+            const farmerBtn = document.getElementById('farmerBtn');
+            const buyerBtn = document.getElementById('buyerBtn');
+            
+            if (type === 'farmer') {
+                farmerBtn.classList.add('active');
+                buyerBtn.classList.remove('active');
+            } else {
+                buyerBtn.classList.add('active');
+                farmerBtn.classList.remove('active');
+            }
+        }
+
+        function handleRegister(event) {
+            event.preventDefault();
+            
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                showMessage('Passwords do not match!', 'error');
+                return;
+            }
+            
+            if (!document.getElementById('terms').checked) {
+                showMessage('Please accept the terms', 'error');
+                return;
+            }
+            
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const email = document.getElementById('email').value;
+            
+            if (users.find(u => u.email === email)) {
+                showMessage('Email already registered!', 'error');
+                return;
+            }
+            
+            const newUser = {
+                id: `${selectedType}${Date.now()}`,
+                name: `${document.getElementById('firstName').value} ${document.getElementById('lastName').value}`,
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                email: email,
+                phone: document.getElementById('phone').value,
+                password: password,
+                type: selectedType,
+                status: 'pending',
+                subscription: { active: false },
+                registrationDate: new Date().toISOString(),
+                products: [],
+                orders: []
+            };
+            
+            localStorage.setItem('pendingRegistration', JSON.stringify(newUser));
+            window.location.href = 'payment.html';
+        }
+
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type === 'error' ? 'error-message' : 'success-message'}`;
+            messageDiv.style.display = 'block';
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FarmConnect - Payment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+
+        .payment-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .payment-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .payment-header h2 {
+            color: #333;
+            font-size: 1.5em;
+        }
+
+        .payment-header p {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .amount-card {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .amount-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .amount-value {
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+
+        .mpesa-details {
+            background: #f5f5f5;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .mpesa-logo {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .mpesa-number {
+            background: white;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin: 12px 0;
+            border: 2px dashed #4CAF50;
+            letter-spacing: 1px;
+        }
+
+        .mpesa-instructions {
+            color: #666;
+            font-size: 0.85em;
+            line-height: 1.5;
+            text-align: left;
+        }
+
+        .mpesa-instructions ol {
+            margin-top: 10px;
+            padding-left: 20px;
+        }
+
+        .mpesa-instructions li {
+            margin-bottom: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .verify-btn {
+            width: 100%;
+            padding: 14px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 12px;
+        }
+
+        .verify-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .back-btn {
+            width: 100%;
+            padding: 12px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+            font-size: 0.9em;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .success-message {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #fff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 480px) {
+            .payment-card {
+                padding: 20px;
+            }
+            
+            .amount-value {
+                font-size: 2em;
+            }
+            
+            .mpesa-number {
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌾 FarmConnect</h1>
+            <a href="registration.html">← Back to Registration</a>
+        </div>
+
+        <div class="payment-card">
+            <div class="payment-header">
+                <h2>💰 Monthly Subscription</h2>
+                <p>Complete payment to activate your account</p>
+            </div>
+
+            <div id="message" class="message"></div>
+
+            <div class="amount-card">
+                <div class="amount-label">Subscription Amount</div>
+                <div class="amount-value">UGX 5,000</div>
+                <div class="amount-label">per month</div>
+            </div>
+
+            <div class="mpesa-details">
+                <div class="mpesa-logo">📱 M-PESA</div>
+                <p style="font-weight: 600;">Send payment to:</p>
+                <div class="mpesa-number">0749140861</div>
+                
+                <div class="mpesa-instructions">
+                    <p><strong>How to pay:</strong></p>
+                    <ol>
+                        <li>Go to M-PESA on your phone</li>
+                        <li>Select "Lipa Na M-PESA"</li>
+                        <li>Enter Business Number: <strong>0749140861</strong></li>
+                        <li>Enter Amount: <strong>UGX 5,000</strong></li>
+                        <li>Enter your PIN and confirm</li>
+                        <li>Enter the transaction code below</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="transactionCode">M-PESA Transaction Code</label>
+                <input type="text" id="transactionCode" placeholder="e.g., QW12ER34TY56" autocomplete="off">
+                <small style="color: #666; display: block; margin-top: 5px;">
+                    Enter the code from your M-PESA confirmation SMS
+                </small>
+            </div>
+
+            <button class="verify-btn" onclick="verifyPayment()" id="verifyBtn">
+                ✓ Verify Payment
+            </button>
+            
+            <button class="back-btn" onclick="goBack()">← Back</button>
+        </div>
+    </div>
+
+    <script>
+        // Check if this is a renewal or new registration
+        let isRenewal = false;
+
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            isRenewal = urlParams.get('renew') === 'true';
+            
+            if (isRenewal) {
+                document.querySelector('.payment-header p').textContent = 'Renew your subscription to continue';
+            }
+        };
+
+        function verifyPayment() {
+            const transactionCode = document.getElementById('transactionCode').value.trim();
+            const verifyBtn = document.getElementById('verifyBtn');
+            
+            if (!transactionCode) {
+                showMessage('Please enter your M-PESA transaction code', 'error');
+                return;
+            }
+            
+            if (transactionCode.length < 5) {
+                showMessage('Please enter a valid transaction code', 'error');
+                return;
+            }
+
+            // Show loading state
+            verifyBtn.disabled = true;
+            verifyBtn.innerHTML = '<span class="loading-spinner"></span> Verifying...';
+
+            // Simulate payment verification (in real app, this would call an API)
+            setTimeout(() => {
+                // Check for pending registration
+                const pendingUser = JSON.parse(localStorage.getItem('pendingRegistration'));
+                const pendingRenewal = JSON.parse(localStorage.getItem('pendingUser'));
+                
+                if (pendingUser) {
+                    // Complete new registration
+                    const subscriptionExpiry = new Date();
+                    subscriptionExpiry.setDate(subscriptionExpiry.getDate() + 30);
+                    
+                    pendingUser.subscription = {
+                        active: true,
+                        startDate: new Date().toISOString(),
+                        expiryDate: subscriptionExpiry.toISOString(),
+                        lastPayment: new Date().toISOString(),
+                        transactionCode: transactionCode
+                    };
+                    pendingUser.status = 'pending'; // Wait for authority approval
+                    
+                    // Save to users list
+                    const users = JSON.parse(localStorage.getItem('users')) || [];
+                    users.push(pendingUser);
+                    localStorage.setItem('users', JSON.stringify(users));
+                    
+                    // Clear pending
+                    localStorage.removeItem('pendingRegistration');
+                    
+                    showMessage('✅ Payment verified! Registration successful. Please wait for admin approval.', 'success');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 3000);
+                    
+                } else if (pendingRenewal) {
+                    // Complete subscription renewal
+                    const subscriptionExpiry = new Date();
+                    subscriptionExpiry.setDate(subscriptionExpiry.getDate() + 30);
+                    
+                    pendingRenewal.subscription = {
+                        active: true,
+                        startDate: new Date().toISOString(),
+                        expiryDate: subscriptionExpiry.toISOString(),
+                        lastPayment: new Date().toISOString(),
+                        transactionCode: transactionCode
+                    };
+                    
+                    // Update user in list
+                    const users = JSON.parse(localStorage.getItem('users')) || [];
+                    const index = users.findIndex(u => u.id === pendingRenewal.id);
+                    if (index !== -1) {
+                        users[index] = pendingRenewal;
+                        localStorage.setItem('users', JSON.stringify(users));
+                    }
+                    
+                    // Update current user
+                    localStorage.setItem('currentUser', JSON.stringify(pendingRenewal));
+                    localStorage.removeItem('pendingUser');
+                    
+                    showMessage('✅ Payment verified! Your subscription has been renewed.', 'success');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 2000);
+                    
+                } else {
+                    showMessage('No pending registration found. Please register first.', 'error');
+                    verifyBtn.disabled = false;
+                    verifyBtn.innerHTML = '✓ Verify Payment';
+                    
+                    setTimeout(() => {
+                        window.location.href = 'registration.html';
+                    }, 2000);
+                }
+            }, 2000);
+        }
+
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type === 'error' ? 'error-message' : 'success-message'}`;
+            messageDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 4000);
+        }
+
+        function goBack() {
+            if (isRenewal) {
+                window.location.href = 'dashboard.html';
+            } else {
+                window.location.href = 'registration.html';
+            }
+        }
+    </script>
+</body>
+</html>
