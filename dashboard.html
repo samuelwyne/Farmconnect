@@ -4,187 +4,1516 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>FarmConnect - Smart Dashboard</title>
+    <!-- Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- CryptoJS for password hashing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); min-height: 100vh; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; color: white; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
-        .logo h1 { font-size: 1.8em; }
-        .logo p { opacity: 0.9; font-size: 0.8em; }
-        .user-info { display: flex; align-items: center; gap: 15px; background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 50px; flex-wrap: wrap; }
-        .user-name { font-weight: 600; font-size: 0.9em; }
-        .user-type-badge { background: #4CAF50; padding: 4px 12px; border-radius: 20px; font-size: 0.75em; font-weight: bold; }
-        .user-type-badge.buyer { background: #2196F3; }
-        .user-type-badge.authority { background: #ff9800; }
-        .logout-btn { padding: 8px 15px; background: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; }
-        .logout-btn:hover { background: #d32f2f; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            color: white;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .logo h1 {
+            font-size: 1.8em;
+        }
+
+        .logo p {
+            opacity: 0.9;
+            font-size: 0.8em;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 15px;
+            border-radius: 50px;
+            flex-wrap: wrap;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .user-type-badge {
+            background: #4CAF50;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: bold;
+        }
+
+        .user-type-badge.buyer {
+            background: #2196F3;
+        }
+
+        .user-type-badge.authority {
+            background: #ff9800;
+        }
+
+        .logout-btn {
+            padding: 8px 15px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: #d32f2f;
+        }
+
+        /* Session Timer */
+        .session-timer {
+            background: rgba(0,0,0,0.5);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.7em;
+        }
+
+        /* Profile Section */
+        .profile-section {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5em;
+            position: relative;
+        }
+
+        .verified-badge {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            background: #4CAF50;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7em;
+            color: white;
+        }
+
+        .profile-info h3 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .profile-info p {
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .edit-profile-btn {
+            padding: 8px 20px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+        }
+
+        /* Order Status Badges */
+        .order-status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.7em;
+            font-weight: bold;
+        }
+
+        .status-pending { background: #ff9800; color: white; }
+        .status-shipped { background: #2196F3; color: white; }
+        .status-delivered { background: #4CAF50; color: white; }
+        .status-cancelled { background: #f44336; color: white; }
+
+        .payment-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.65em;
+            margin-left: 5px;
+        }
+
+        .payment-paid { background: #4CAF50; color: white; }
+        .payment-pending { background: #ff9800; color: white; }
+
+        /* Delivery Tracking */
+        .delivery-tracking {
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        .tracking-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+        }
+
+        .tracking-step .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ddd;
+        }
+
+        .tracking-step.active .dot {
+            background: #4CAF50;
+            box-shadow: 0 0 5px #4CAF50;
+        }
+
+        .tracking-step.completed .dot {
+            background: #4CAF50;
+        }
+
+        /* Rating Stars */
+        .rating {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .star {
+            font-size: 1.2em;
+            cursor: pointer;
+            color: #ddd;
+        }
+
+        .star.active {
+            color: #FFC107;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            z-index: 2000;
+            display: none;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
         .ads-main-section { margin-bottom: 20px; }
-        .featured-ad { background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%); border-radius: 20px; padding: 20px; color: white; margin-bottom: 15px; }
-        .partner-ads-section { background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+        .featured-ad {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            border-radius: 20px;
+            padding: 20px;
+            color: white;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .partner-ads-section {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
         .section-header h3 { color: #333; font-size: 1.2em; }
-        .advertiser-link { background: #4CAF50; color: white; padding: 8px 15px; border-radius: 25px; cursor: pointer; font-size: 0.85em; }
-        .ads-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
-        .partner-ad-card { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 15px; padding: 15px; cursor: pointer; }
-        .dashboard-layout { display: flex; gap: 20px; flex-wrap: wrap; }
+        .advertiser-link {
+            background: #4CAF50;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+
+        .ads-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .partner-ad-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 15px;
+            cursor: pointer;
+        }
+
+        .dashboard-layout {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
         .main-content { flex: 2; min-width: 250px; }
         .sidebar-ads { flex: 1; min-width: 200px; }
-        .subscription-bar { background: white; border-radius: 10px; padding: 15px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
-        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.85em; font-weight: 600; }
+
+        .subscription-bar {
+            background: white;
+            border-radius: 10px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
         .status-active { background: #4CAF50; color: white; }
         .status-expired { background: #f44336; color: white; }
-        .renew-btn { padding: 8px 20px; background: #FFC107; color: #333; border: none; border-radius: 5px; cursor: pointer; }
+
+        .renew-btn {
+            padding: 8px 20px;
+            background: #FFC107;
+            color: #333;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
         .mode-display { text-align: center; margin-bottom: 25px; }
-        .mode-badge { display: inline-block; padding: 12px 30px; font-size: 1em; border-radius: 50px; font-weight: bold; background: #4CAF50; color: white; }
+        .mode-badge {
+            display: inline-block;
+            padding: 12px 30px;
+            font-size: 1em;
+            border-radius: 50px;
+            font-weight: bold;
+            background: #4CAF50;
+            color: white;
+        }
         .mode-badge.buyer { background: #2196F3; }
-        .dashboard { display: block; background: white; border-radius: 20px; padding: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
-        .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .stat-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 15px; text-align: center; }
+
+        .dashboard {
+            display: block;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        /* Analytics Section */
+        .analytics-section {
+            background: #f9f9f9;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .chart-container {
+            max-width: 100%;
+            height: 300px;
+            margin-top: 15px;
+        }
+
+        /* Wishlist Section */
+        .wishlist-section {
+            background: #f9f9f9;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            display: none;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover { transform: translateY(-3px); }
         .stat-number { font-size: 1.5em; font-weight: bold; }
-        .add-product-form { background: #f9f9f9; padding: 20px; border-radius: 15px; margin-bottom: 25px; }
+
+        .add-product-form {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+        }
+
         .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; margin-bottom: 5px; color: #555; font-weight: 500; font-size: 0.9em; }
-        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 0.95em; }
-        .btn { padding: 10px 25px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
-        .search-section { margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
-        .search-input { flex: 1; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; }
-        .filter-select { padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; min-width: 120px; }
-        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 20px; }
-        .product-card { background: white; border-radius: 15px; padding: 15px; box-shadow: 0 3px 10px rgba(0,0,0,0.1); border: 1px solid #f0f0f0; }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95em;
+        }
+
+        .btn {
+            padding: 10px 25px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .search-section {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+        }
+
+        .filter-select {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            min-width: 120px;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            border: 1px solid #f0f0f0;
+            transition: transform 0.2s;
+            position: relative;
+        }
+
+        .product-card:hover { transform: translateY(-3px); }
         .product-card.farmer-view { border-left: 4px solid #4CAF50; }
         .product-card.buyer-view { border-left: 4px solid #2196F3; }
+
+        .wishlist-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #ddd;
+        }
+
+        .wishlist-icon.active {
+            color: #e91e63;
+        }
+
+        .product-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+        }
+
         .product-name { font-size: 1.2em; font-weight: bold; color: #333; }
         .product-price { font-size: 1.2em; font-weight: bold; color: #4CAF50; }
-        .product-quantity { color: #666; background: #f5f5f5; padding: 3px 8px; border-radius: 20px; font-size: 0.8em; }
-        .buy-btn, .edit-btn, .delete-btn { padding: 8px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85em; }
+        .product-quantity {
+            color: #666;
+            background: #f5f5f5;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 0.8em;
+        }
+
+        .buy-btn, .edit-btn, .delete-btn, .mark-shipped-btn, .rate-btn, .pay-now-btn, .cancel-order-btn, .wishlist-btn {
+            padding: 8px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85em;
+            margin-right: 5px;
+            margin-top: 5px;
+        }
+
         .buy-btn { background: #2196F3; color: white; }
         .edit-btn { background: #ff9800; color: white; }
         .delete-btn { background: #f44336; color: white; }
-        .orders-section { margin-top: 30px; padding-top: 20px; border-top: 2px solid #f0f0f0; }
-        .order-card { background: #f9f9f9; border-radius: 10px; padding: 12px; margin-bottom: 12px; border-left: 4px solid #2196F3; cursor: pointer; }
+        .mark-shipped-btn { background: #4CAF50; color: white; }
+        .rate-btn { background: #FFC107; color: #333; }
+        .pay-now-btn { background: #e91e63; color: white; }
+        .cancel-order-btn { background: #f44336; color: white; }
+        .wishlist-btn { background: none; font-size: 1.2em; }
+
+        .orders-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .order-card {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-left: 4px solid #2196F3;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
         .order-card:hover { background: #f0f0f0; }
-        .chat-container { position: fixed; bottom: 20px; right: 20px; width: 400px; max-width: 90vw; background: white; border-radius: 15px; box-shadow: 0 5px 30px rgba(0,0,0,0.3); z-index: 1000; display: none; flex-direction: column; overflow: hidden; }
-        .chat-header { background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%); color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; }
-        .chat-close { background: none; border: none; color: white; font-size: 1.2em; cursor: pointer; }
-        .chat-messages { height: 350px; overflow-y: auto; padding: 12px; background: #f5f5f5; display: flex; flex-direction: column; gap: 8px; }
-        .message { max-width: 80%; padding: 8px 12px; border-radius: 15px; font-size: 0.85em; }
-        .message.sent { background: #4CAF50; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
-        .message.received { background: white; color: #333; align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .message small { font-size: 0.65em; opacity: 0.7; display: block; margin-top: 4px; }
-        .chat-input-area { display: flex; padding: 10px; border-top: 1px solid #e0e0e0; background: white; gap: 8px; flex-wrap: wrap; }
-        .chat-input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 20px; outline: none; }
-        .chat-send-btn { padding: 8px 15px; background: #4CAF50; color: white; border: none; border-radius: 20px; cursor: pointer; }
-        .voice-btn { background: #ff9800; padding: 8px 12px; }
-        .voice-btn.recording { background: #f44336; animation: pulse 0.5s infinite; }
-        .order-info-preview { background: #e3f2fd; padding: 8px 12px; font-size: 0.75em; border-bottom: 1px solid #ddd; }
-        .chat-notification { position: fixed; bottom: 20px; right: 20px; background: #f44336; color: white; padding: 8px 15px; border-radius: 30px; font-size: 0.8em; cursor: pointer; z-index: 999; animation: pulse 1s infinite; }
-        .permission-prompt { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 3000; display: none; align-items: center; justify-content: center; }
-        .permission-card { background: white; border-radius: 20px; padding: 30px; text-align: center; max-width: 350px; }
-        .permission-card button { padding: 10px 25px; margin: 5px; border: none; border-radius: 25px; cursor: pointer; }
+
+        .chat-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 400px;
+            max-width: 90vw;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+            color: white;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2em;
+            cursor: pointer;
+        }
+
+        .chat-messages {
+            height: 350px;
+            overflow-y: auto;
+            padding: 12px;
+            background: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 8px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            word-wrap: break-word;
+        }
+
+        .message.sent {
+            background: #4CAF50;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.received {
+            background: white;
+            color: #333;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .message.audio { background: #e3f2fd; }
+        .message small {
+            font-size: 0.65em;
+            opacity: 0.7;
+            display: block;
+            margin-top: 4px;
+        }
+
+        .audio-player {
+            max-width: 200px;
+            height: 35px;
+            margin-top: 5px;
+        }
+
+        .chat-input-area {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #e0e0e0;
+            background: white;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+            font-size: 0.85em;
+        }
+
+        .chat-send-btn {
+            padding: 8px 15px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        .voice-btn {
+            background: #ff9800;
+            padding: 8px 12px;
+        }
+
+        .voice-btn.recording {
+            background: #f44336;
+            animation: pulse 0.5s infinite;
+        }
+
+        .order-info-preview {
+            background: #e3f2fd;
+            padding: 8px 12px;
+            font-size: 0.75em;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .chat-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #f44336;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 30px;
+            font-size: 0.8em;
+            cursor: pointer;
+            z-index: 999;
+            animation: pulse 1s infinite;
+        }
+
+        .permission-prompt {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .permission-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            max-width: 350px;
+        }
+
+        .permission-card button {
+            padding: 10px 25px;
+            margin: 5px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+        }
+
         .allow-btn { background: #4CAF50; color: white; }
         .deny-btn { background: #f44336; color: white; }
-        .smart-farming-section { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border-radius: 20px; padding: 20px; margin-bottom: 25px; }
-        .smart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
-        .smart-card { background: white; border-radius: 15px; padding: 12px; cursor: pointer; text-align: center; }
-        .smart-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+
+        .smart-farming-section {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .smart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .smart-card {
+            background: white;
+            border-radius: 15px;
+            padding: 12px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            text-align: center;
+        }
+
+        .smart-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
         .smart-icon { font-size: 2em; margin-bottom: 8px; }
         .smart-title { font-weight: bold; color: #333; font-size: 0.9em; }
-        .authority-dashboard { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
-        .revenue-section { background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 15px; border-radius: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 15px; }
+        .smart-desc { font-size: 0.7em; color: #666; }
+
+        .authority-dashboard {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .revenue-section {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
         .revenue-amount { font-size: 1.8em; font-weight: bold; }
-        .users-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-top: 15px; }
-        .user-card { background: #f9f9f9; border-radius: 12px; padding: 15px; border-left: 4px solid; }
-        .approve-btn, .reject-btn, .remove-btn { padding: 6px 12px; border: none; border-radius: 5px; cursor: pointer; font-size: 0.8em; margin-right: 5px; }
+
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .user-card {
+            background: #f9f9f9;
+            border-radius: 12px;
+            padding: 15px;
+            border-left: 4px solid;
+        }
+
+        .approve-btn, .reject-btn, .remove-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-right: 5px;
+        }
+
         .approve-btn { background: #4CAF50; color: white; }
         .reject-btn { background: #f44336; color: white; }
         .remove-btn { background: #757575; color: white; }
-        .subscription-required { background: white; border-radius: 20px; padding: 40px; text-align: center; margin-top: 50px; }
-        .subscription-required h3 { color: #f44336; margin-bottom: 15px; }
-        .no-data { text-align: center; padding: 30px; color: #999; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-        @media (max-width: 768px) { .container { padding: 15px; } .ads-grid { grid-template-columns: 1fr; } .dashboard-layout { flex-direction: column; } .chat-container { width: 95vw; right: 2.5vw; } }
+
+        .subscription-required {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            margin-top: 50px;
+            display: none;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 30px;
+            color: #999;
+        }
+
+        .payment-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 4000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .payment-modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 400px;
+            width: 90%;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .payment-amount { font-size: 2em; color: #4CAF50; margin: 15px 0; }
+        .payment-option {
+            background: #f5f5f5;
+            border-radius: 15px;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border: 2px solid transparent;
+        }
+        .payment-option.selected { border-color: #4CAF50; background: #e8f5e9; }
+
+        .close-modal {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        /* Demo Login Info */
+        .demo-login-info {
+            background: linear-gradient(135deg, #2196F3, #0D47A1);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .demo-login-info h4 {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .demo-login-info p {
+            font-size: 0.8em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .demo-login-info small {
+            font-size: 0.7em;
+            opacity: 0.7;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .ads-grid { grid-template-columns: 1fr; }
+            .dashboard-layout { flex-direction: column; }
+            .chat-container { width: 95vw; right: 2.5vw; }
+            .profile-header { flex-direction: column; text-align: center; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <div class="logo"><h1>🌾 FarmConnect</h1><p>Smart Farming | Direct from Farm to Table</p></div>
+            <div class="logo">
+                <h1>🌾 FarmConnect</h1>
+                <p>Smart Farming | Direct from Farm to Table</p>
+            </div>
             <div class="user-info">
                 <span class="user-name" id="userNameDisplay"></span>
+                <span class="session-timer" id="sessionTimer">Session: 30:00</span>
                 <span class="user-type-badge" id="userTypeBadge"></span>
                 <button class="logout-btn" onclick="logout()">Logout</button>
             </div>
         </header>
 
+        <!-- Demo Login Info Card -->
+        <div id="demoLoginInfo" class="demo-login-info" onclick="showLoginInfo()">
+            <h4>🔐 Demo Test Accounts</h4>
+            <p>👨‍🌾 Farmer: farmer@farmconnect.com | 👛 Buyer: buyer@farmconnect.com | 👑 Admin: admin@farmconnect.com</p>
+            <small>Click here for all test login details →</small>
+        </div>
+
+        <!-- Profile Section -->
+        <div id="profileSection" class="profile-section">
+            <div class="profile-header">
+                <div class="profile-avatar" id="profileAvatar">
+                    👨‍🌾
+                    <span class="verified-badge" id="verifiedBadge" style="display:none;">✓</span>
+                </div>
+                <div class="profile-info">
+                    <h3 id="profileName">John Mubiru</h3>
+                    <p id="profileEmail">farmer@farmconnect.com</p>
+                    <p id="profilePhone">+256 XXX XXX XXX</p>
+                    <p id="profileLocation">📍 Kampala, Uganda</p>
+                    <p id="profileVerified" style="color:#4CAF50;">✅ Email Verified</p>
+                </div>
+                <button class="edit-profile-btn" onclick="editProfile()">✏️ Edit Profile</button>
+            </div>
+            <div id="editProfileForm" class="address-form" style="display: none; background:#f9f9f9; padding:15px; border-radius:15px; margin-top:15px;">
+                <input type="text" id="editName" placeholder="Full Name" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;">
+                <input type="tel" id="editPhone" placeholder="Phone Number" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;">
+                <input type="text" id="editLocation" placeholder="Location" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;">
+                <button class="btn" onclick="saveProfile()">Save Changes</button>
+                <button class="btn" style="background:#999;" onclick="cancelEditProfile()">Cancel</button>
+            </div>
+        </div>
+
         <div id="subscriptionBar" class="subscription-bar" style="display: flex;">
-            <div class="subscription-status"><span>Subscription:</span><span id="subscriptionStatus" class="status-badge status-active">ACTIVE</span><span>Valid until: <span id="expiryDate">30 days</span></span></div>
+            <div class="subscription-status">
+                <span>Subscription:</span>
+                <span id="subscriptionStatus" class="status-badge status-active">ACTIVE</span>
+                <span>Valid until: <span id="expiryDate">30 days</span></span>
+            </div>
             <button class="renew-btn" onclick="renewSubscription()">Renew (UGX 5,000)</button>
         </div>
 
-        <div id="subscriptionRequiredMsg" class="subscription-required" style="display: none;">
-            <h3>⚠️ Subscription Required</h3>
-            <p>You need an active subscription to use FarmConnect features.</p>
-            <button class="btn" onclick="renewSubscription()">Subscribe Now (UGX 5,000/month)</button>
+        <div id="featuredAdContainer" class="ads-main-section"></div>
+
+        <div id="authorityDashboard" class="authority-dashboard" style="display: none;">
+            <h2>👑 Authority Dashboard</h2>
+            <div class="revenue-section">
+                <div><div>Total Revenue</div><div class="revenue-amount" id="totalRevenue">UGX 0</div></div>
+                <div><div>Active Subscriptions</div><div class="revenue-amount" id="activeSubscriptions">0</div></div>
+                <div><div>Total Users</div><div class="revenue-amount" id="totalUsers">0</div></div>
+            </div>
+            
+            <!-- Analytics Chart -->
+            <div class="analytics-section">
+                <h3>📊 Revenue Analytics</h3>
+                <canvas id="revenueChart" class="chart-container"></canvas>
+            </div>
+            
+            <h3>⏳ Pending User Approvals</h3>
+            <div id="pendingUsersList" class="users-grid"></div>
+            <h3>👨‍🌾 Active Farmers</h3>
+            <div id="activeFarmersList" class="users-grid"></div>
+            <h3>🛒 Active Buyers</h3>
+            <div id="activeBuyersList" class="users-grid"></div>
+            <h3>📢 All Advertisements</h3>
+            <div id="adsManagementList" class="users-grid"></div>
         </div>
 
-        <div id="featuredAdContainer" class="ads-main-section"></div>
-        <div id="authorityDashboard" class="authority-dashboard" style="display: none;"><h2>👑 Authority Dashboard</h2><div class="revenue-section"><div><div>Total Revenue</div><div class="revenue-amount" id="totalRevenue">UGX 0</div></div><div><div>Active Subscriptions</div><div class="revenue-amount" id="activeSubscriptions">0</div></div></div><h3>⏳ Pending User Approvals</h3><div id="pendingUsersList" class="users-grid"></div><h3>👨‍🌾 Active Farmers</h3><div id="activeFarmersList" class="users-grid"></div><h3>🛒 Active Buyers</h3><div id="activeBuyersList" class="users-grid"></div><h3>📢 All Advertisements</h3><div id="adsManagementList" class="users-grid"></div></div>
+        <!-- Payment Modal -->
+        <div id="paymentModal" class="payment-modal">
+            <div class="payment-modal-content">
+                <h3>💰 Complete Payment</h3>
+                <p>Order Total:</p>
+                <div class="payment-amount" id="paymentAmount">UGX 0</div>
+                <div class="payment-option" onclick="selectPaymentMethod('mobile_money')" id="mobileMoneyPayment">
+                    <div class="payment-icon">📱</div>
+                    <div>Mobile Money (M-PESA / Airtel)</div>
+                </div>
+                <div class="payment-option" onclick="selectPaymentMethod('card')" id="cardPayment">
+                    <div class="payment-icon">💳</div>
+                    <div>Card Payment (Visa/Mastercard)</div>
+                </div>
+                <div id="paymentPhoneInput" style="display:none; margin-top:15px;">
+                    <input type="tel" id="paymentPhone" placeholder="Enter phone number" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+                    <button class="btn" onclick="processMobilePayment()" style="margin-top:10px;">Pay Now</button>
+                </div>
+                <button class="close-modal" onclick="closePaymentModal()">Cancel</button>
+            </div>
+        </div>
 
-        <div id="permissionPrompt" class="permission-prompt"><div class="permission-card"><h3>🎤 Microphone Access</h3><p>FarmConnect needs access to your microphone to send voice messages.</p><button class="allow-btn" id="allowPermissionBtn">Allow Access</button><button class="deny-btn" id="denyPermissionBtn">Don't Allow</button></div></div>
+        <div id="permissionPrompt" class="permission-prompt">
+            <div class="permission-card">
+                <h3>🎤 Microphone Access</h3>
+                <p>FarmConnect needs access to your microphone to send voice messages.</p>
+                <button class="allow-btn" id="allowPermissionBtn">Allow Access</button>
+                <button class="deny-btn" id="denyPermissionBtn">Don't Allow</button>
+            </div>
+        </div>
 
-        <div id="chatContainer" class="chat-container"><div class="chat-header" id="chatHeader"><h4>💬 Order Chat</h4><button class="chat-close" onclick="closeChat()">×</button></div><div id="orderInfoPreview" class="order-info-preview"></div><div id="chatMessages" class="chat-messages"></div><div class="chat-input-area"><input type="text" id="chatInput" class="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendTextMessage()"><button class="chat-send-btn" onclick="sendTextMessage()">Send</button><button class="chat-send-btn voice-btn" id="voiceRecordBtn" onclick="requestVoicePermission()">🎤</button></div></div>
+        <div id="chatContainer" class="chat-container">
+            <div class="chat-header" id="chatHeader">
+                <h4>💬 Order Chat</h4>
+                <button class="chat-close" onclick="closeChat()">×</button>
+            </div>
+            <div id="orderInfoPreview" class="order-info-preview"></div>
+            <div id="chatMessages" class="chat-messages"></div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" class="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendTextMessage()">
+                <button class="chat-send-btn" onclick="sendTextMessage()">Send</button>
+                <button class="chat-send-btn voice-btn" id="voiceRecordBtn" onclick="requestVoicePermission()">🎤</button>
+            </div>
+        </div>
 
-        <div id="chatNotification" class="chat-notification" style="display: none;" onclick="openChatFromNotification()">💬 New message!</div>
+        <div id="chatNotification" class="chat-notification" style="display: none;" onclick="openChatFromNotification()">
+            💬 New message!
+        </div>
+
+        <div id="toastMessage" class="toast"></div>
 
         <div id="appContent" style="display: block;">
             <div class="dashboard-layout">
                 <div class="main-content">
-                    <div class="mode-display"><span id="modeBadge" class="mode-badge">👨‍🌾 Farmer Mode</span></div>
+                    <div class="mode-display">
+                        <span id="modeBadge" class="mode-badge">👨‍🌾 Farmer Mode</span>
+                    </div>
+
+                    <!-- Wishlist Section (Buyer only) -->
+                    <div id="wishlistSection" class="wishlist-section">
+                        <h3>❤️ My Wishlist</h3>
+                        <div id="wishlistContainer" class="products-grid"></div>
+                    </div>
+
+                    <!-- Farmer Dashboard -->
                     <div id="farmerDashboard" class="dashboard">
                         <h2>👨‍🌾 My Smart Farm Dashboard</h2>
-                        <div class="smart-farming-section"><div class="smart-grid"><div class="smart-card" onclick="alert('🤖 AI Advisor: Plant maize in March-May. Use 20-25kg seeds per acre.')"><div class="smart-icon">🤖</div><div class="smart-title">AI Farm Advisor</div></div><div class="smart-card" onclick="alert('📊 Market Prices:\nKampala: Maize UGX 800-1200/kg')"><div class="smart-icon">📊</div><div class="smart-title">Market Price Check</div></div><div class="smart-card" onclick="alert('⚠️ Aflatoxin Prevention:\n• Dry on tarps\n• Use PICS bags')"><div class="smart-icon">⚠️</div><div class="smart-title">Aflatoxin Alert</div></div></div></div>
-                        <div class="stats-container"><div class="stat-card"><div class="stat-number" id="farmerProductsCount">0</div><div class="stat-label">My Products</div></div><div class="stat-card"><div class="stat-number" id="farmerOrdersCount">0</div><div class="stat-label">Orders</div></div><div class="stat-card"><div class="stat-number" id="farmerRevenue">UGX 0</div><div class="stat-label">Revenue</div></div></div>
-                        <div class="add-product-form"><h3>➕ Add New Product</h3><form id="addProductForm" onsubmit="addProduct(event)"><div class="form-group"><label>Product Name</label><input type="text" id="productName" required></div><div class="form-group"><label>Category</label><select id="productCategory" required><option value="">Select</option><option value="vegetables">Vegetables</option><option value="fruits">Fruits</option><option value="grains">Grains</option><option value="dairy">Dairy</option></select></div><div class="form-group"><label>Description</label><textarea id="productDescription" rows="2" required></textarea></div><div class="form-group"><label>Price (UGX)</label><input type="number" id="productPrice" required></div><div class="form-group"><label>Quantity</label><input type="number" id="productQuantity" required></div><div class="form-group"><label>Unit</label><select id="productUnit"><option value="kg">kg</option><option value="piece">piece</option></select></div><button type="submit" class="btn">➕ Add Product</button></form></div>
-                        <h3>📦 My Products</h3><div id="farmerProducts" class="products-grid"></div>
-                        <div class="orders-section"><h3>📋 Orders Received</h3><div id="farmerOrders"></div></div>
+                        
+                        <!-- Analytics for Farmer -->
+                        <div class="analytics-section">
+                            <h3>📈 My Sales Analytics</h3>
+                            <canvas id="farmerSalesChart" class="chart-container"></canvas>
+                        </div>
+                        
+                        <div class="smart-farming-section">
+                            <div class="smart-grid">
+                                <div class="smart-card" onclick="showAITips()"><div class="smart-icon">🤖</div><div class="smart-title">AI Farm Advisor</div><div class="smart-desc">Planting tips & pest control</div></div>
+                                <div class="smart-card" onclick="fetchLiveMarketPrices()"><div class="smart-icon">📊</div><div class="smart-title">Live Market Prices</div><div class="smart-desc">Real-time Uganda prices</div></div>
+                                <div class="smart-card" onclick="showWeatherAlert()"><div class="smart-icon">🌤️</div><div class="smart-title">Weather Advisory</div><div class="smart-desc">3-day farming forecast</div></div>
+                                <div class="smart-card" onclick="showAflatoxinAlert()"><div class="smart-icon">⚠️</div><div class="smart-title">Aflatoxin Alert</div><div class="smart-desc">Harvest safety check</div></div>
+                                <div class="smart-card" onclick="showCropDoctor()"><div class="smart-icon">🩺</div><div class="smart-title">Crop Disease Doctor</div><div class="smart-desc">Identify crop problems</div></div>
+                                <div class="smart-card" onclick="showFertilizerCalc()"><div class="smart-icon">🧪</div><div class="smart-title">Fertilizer Calculator</div><div class="smart-desc">Know exactly what to add</div></div>
+                            </div>
+                        </div>
+
+                        <div class="stats-container">
+                            <div class="stat-card" onclick="scrollToProducts()">
+                                <div class="stat-number" id="farmerProductsCount">0</div>
+                                <div class="stat-label">My Products</div>
+                            </div>
+                            <div class="stat-card" onclick="scrollToOrders()">
+                                <div class="stat-number" id="farmerOrdersCount">0</div>
+                                <div class="stat-label">Orders Received</div>
+                            </div>
+                            <div class="stat-card" onclick="showRevenue()">
+                                <div class="stat-number" id="farmerRevenue">UGX 0</div>
+                                <div class="stat-label">Total Revenue</div>
+                            </div>
+                        </div>
+
+                        <div class="add-product-form">
+                            <h3>➕ Add New Product</h3>
+                            <form id="addProductForm" onsubmit="addProduct(event)">
+                                <div class="form-group"><label>Product Name</label><input type="text" id="productName" required></div>
+                                <div class="form-group"><label>Category</label><select id="productCategory" required><option value="">Select</option><option value="vegetables">Vegetables</option><option value="fruits">Fruits</option><option value="grains">Grains</option><option value="dairy">Dairy</option></select></div>
+                                <div class="form-group"><label>Description</label><textarea id="productDescription" rows="2" required></textarea></div>
+                                <div class="form-group"><label>Price (UGX)</label><input type="number" id="productPrice" required></div>
+                                <div class="form-group"><label>Quantity</label><input type="number" id="productQuantity" required></div>
+                                <div class="form-group"><label>Unit</label><select id="productUnit"><option value="kg">kg</option><option value="piece">piece</option><option value="bunch">bunch</option></select></div>
+                                <div class="form-group"><label>Product Image</label><input type="file" id="productImage" accept="image/*"></div>
+                                <button type="submit" class="btn">➕ Add Product</button>
+                            </form>
+                        </div>
+
+                        <h3>📦 My Products</h3>
+                        <div id="farmerProducts" class="products-grid"></div>
+
+                        <div class="orders-section">
+                            <h3>📋 Orders Received</h3>
+                            <div id="farmerOrders"></div>
+                        </div>
                     </div>
+
+                    <!-- Buyer Dashboard -->
                     <div id="buyerDashboard" class="dashboard">
                         <h2>🛒 Shop Fresh Produce</h2>
-                        <div class="search-section"><input type="text" id="searchInput" class="search-input" placeholder="🔍 Search products..." onkeyup="filterProducts()"><select id="categoryFilter" class="filter-select" onchange="filterProducts()"><option value="">All Categories</option><option value="vegetables">Vegetables</option><option value="fruits">Fruits</option><option value="grains">Grains</option><option value="dairy">Dairy</option></select></div>
+                        <div class="search-section">
+                            <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search products..." onkeyup="filterProducts()">
+                            <select id="categoryFilter" class="filter-select" onchange="filterProducts()">
+                                <option value="">All Categories</option>
+                                <option value="vegetables">Vegetables</option>
+                                <option value="fruits">Fruits</option>
+                                <option value="grains">Grains</option>
+                                <option value="dairy">Dairy</option>
+                            </select>
+                            <button class="btn" onclick="showWishlist()" style="background:#e91e63;">❤️ Wishlist</button>
+                        </div>
                         <div id="buyerProducts" class="products-grid"></div>
-                        <div class="orders-section"><h3>📋 My Orders</h3><div id="buyerOrders"></div></div>
+                        <div class="orders-section">
+                            <h3>📋 My Orders</h3>
+                            <div id="buyerOrders"></div>
+                        </div>
                     </div>
                 </div>
+
                 <div class="sidebar-ads" id="sidebarAdsContainer"></div>
             </div>
         </div>
     </div>
 
     <script>
-        // Sample data for testing
+        // ==================== TEST ACCOUNTS WITH HASHED PASSWORDS ====================
+        const TEST_ACCOUNTS = [
+            {
+                id: "farmer_john",
+                name: "John Mubiru",
+                email: "farmer@farmconnect.com",
+                passwordHash: CryptoJS.SHA256("farmer123").toString(),
+                type: "farmer",
+                phone: "+256700000001",
+                location: "Kampala, Uganda",
+                verified: true,
+                farm: "Mubiru Organic Farms",
+                subscription: { active: true, expiryDate: new Date(Date.now() + 30*86400000).toISOString() },
+                status: "approved",
+                lastActive: new Date().toISOString()
+            },
+            {
+                id: "buyer_sarah",
+                name: "Sarah Namukasa",
+                email: "buyer@farmconnect.com",
+                passwordHash: CryptoJS.SHA256("buyer123").toString(),
+                type: "buyer",
+                phone: "+256700000010",
+                location: "Kampala, Uganda",
+                verified: true,
+                subscription: { active: true, expiryDate: new Date(Date.now() + 30*86400000).toISOString() },
+                status: "approved",
+                lastActive: new Date().toISOString()
+            },
+            {
+                id: "authority_admin",
+                name: "Administrator",
+                email: "admin@farmconnect.com",
+                passwordHash: CryptoJS.SHA256("admin123").toString(),
+                type: "authority",
+                phone: "+256700000099",
+                location: "Kampala, Uganda",
+                verified: true,
+                status: "approved",
+                lastActive: new Date().toISOString()
+            }
+        ];
+
+        // Sample products
+        const sampleProducts = [
+            { id: "prod_1", farmerId: "farmer_john", farmerName: "John Mubiru", name: "Fresh Maize", category: "grains", description: "Freshly harvested maize, non-GMO", price: 1200, quantity: 100, unit: "kg", image: "🌽", rating: 4.5, imageData: null },
+            { id: "prod_2", farmerId: "farmer_john", farmerName: "John Mubiru", name: "Organic Beans", category: "grains", description: "Rich in protein, no chemicals", price: 3500, quantity: 50, unit: "kg", image: "🫘", rating: 4.8, imageData: null },
+            { id: "prod_3", farmerId: "farmer_john", farmerName: "John Mubiru", name: "Fresh Tomatoes", category: "vegetables", description: "Farm fresh tomatoes", price: 2500, quantity: 30, unit: "kg", image: "🍅", rating: 4.2, imageData: null }
+        ];
+
+        const defaultAds = [
+            { id: "ad1", company: "AgriTech Solutions", product: "Smart Tractor", description: "GPS navigation farming equipment", discount: "20% OFF", icon: "🚜", featured: true },
+            { id: "ad2", company: "GreenGro Fertilizers", product: "Organic Bio-Fertilizer", description: "100% organic, increases yield", discount: "Buy 2 Get 1 Free", icon: "🌱", featured: false },
+            { id: "ad3", company: "FarmGuard Insurance", product: "Crop Protection Plan", description: "Protect from weather & pests", discount: "First month FREE", icon: "🛡️", featured: false }
+        ];
+
         let currentUser = null;
         let allProducts = [];
         let allOrders = [];
         let allMessages = {};
         let allUsers = [];
+        let allRatings = {};
+        let farmAds = [];
+        let wishlist = [];
         let currentChatOrder = null;
         let mediaRecorderObj = null;
         let audioRecordChunks = [];
+        let pendingOrderId = null;
+        let pendingOrderTotal = 0;
+        let selectedPaymentMethod = null;
+        let sessionTimerInterval = null;
+        let sessionTimeLeft = 30 * 60; // 30 minutes in seconds
+        let revenueChart = null;
+        let farmerSalesChart = null;
 
-        // Sample products for demo
-        const sampleProducts = [
-            { id: "prod_1", farmerId: "farmer1", farmerName: "John Mubiru", name: "Fresh Maize", category: "grains", description: "Freshly harvested maize, non-GMO", price: 1200, quantity: 100, unit: "kg" },
-            { id: "prod_2", farmerId: "farmer1", farmerName: "John Mubiru", name: "Organic Beans", category: "grains", description: "Rich in protein, no chemicals", price: 3500, quantity: 50, unit: "kg" },
-            { id: "prod_3", farmerId: "farmer2", farmerName: "Grace Auma", name: "Fresh Tomatoes", category: "vegetables", description: "Farm fresh tomatoes", price: 2500, quantity: 30, unit: "kg" }
-        ];
+        // ==================== SESSION MANAGEMENT ====================
+        function startSessionTimer() {
+            if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+            
+            sessionTimeLeft = 30 * 60;
+            updateSessionDisplay();
+            
+            sessionTimerInterval = setInterval(() => {
+                sessionTimeLeft--;
+                updateSessionDisplay();
+                
+                if (sessionTimeLeft <= 0) {
+                    clearInterval(sessionTimerInterval);
+                    showToast("Session expired! Please login again.", 'error');
+                    setTimeout(() => logout(), 2000);
+                }
+            }, 1000);
+        }
+
+        function updateSessionDisplay() {
+            const minutes = Math.floor(sessionTimeLeft / 60);
+            const seconds = sessionTimeLeft % 60;
+            document.getElementById('sessionTimer').textContent = `Session: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function resetSessionTimer() {
+            if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+            startSessionTimer();
+        }
+
+        // ==================== PASSWORD HASHING ====================
+        function hashPassword(password) {
+            return CryptoJS.SHA256(password).toString();
+        }
+
+        function verifyPassword(inputPassword, storedHash) {
+            return hashPassword(inputPassword) === storedHash;
+        }
+
+        // ==================== EMAIL VERIFICATION ====================
+        function sendVerificationEmail(email) {
+            // Simulate sending verification email
+            console.log(`📧 Verification email sent to ${email}`);
+            showToast(`Verification email sent to ${email}`, 'success');
+        }
+
+        function verifyEmail(code) {
+            // In production, verify with backend
+            if (code === "123456") {
+                currentUser.verified = true;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                document.getElementById('profileVerified').textContent = "✅ Email Verified";
+                document.getElementById('verifiedBadge').style.display = 'flex';
+                showToast("Email verified successfully!", 'success');
+                return true;
+            }
+            return false;
+        }
+
+        // ==================== PUSH NOTIFICATIONS ====================
+        async function requestNotificationPermission() {
+            if ('Notification' in window) {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    showToast("Notifications enabled!", 'success');
+                }
+            }
+        }
+
+        function sendNotification(title, body) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, { body: body, icon: '/favicon.ico' });
+            }
+        }
+
+        // ==================== LIVE MARKET PRICES API ====================
+        async function fetchLiveMarketPrices() {
+            showToast("Fetching live market prices from Uganda...", 'info');
+            
+            try {
+                // Using a free commodity price API
+                const response = await fetch('https://api. commodities.ninja/v2/commodity-prices?commodity=maize,beans,coffee');
+                if (response.ok) {
+                    const data = await response.json();
+                    // Display prices
+                    let priceList = "📊 Live Market Prices (Uganda):\n\n";
+                    for (const [crop, price] of Object.entries(data)) {
+                        priceList += `${crop}: UGX ${Math.round(price * 3800).toLocaleString()}/kg\n`;
+                    }
+                    alert(priceList);
+                } else {
+                    // Fallback to local data
+                    alert("📊 Current Market Prices (Uganda):\n\n📍 Kampala:\n• Maize: UGX 800-1200/kg\n• Beans: UGX 2500-3500/kg\n• Tomatoes: UGX 2000-4000/kg\n\n📍 Gulu:\n• Maize: UGX 700-1000/kg\n• Beans: UGX 2200-3000/kg");
+                }
+            } catch (error) {
+                alert("📊 Current Market Prices (Uganda):\n\n📍 Kampala:\n• Maize: UGX 800-1200/kg\n• Beans: UGX 2500-3500/kg\n• Tomatoes: UGX 2000-4000/kg");
+            }
+        }
+
+        // ==================== WISHLIST FUNCTIONS ====================
+        function toggleWishlist(productId) {
+            const index = wishlist.indexOf(productId);
+            if (index === -1) {
+                wishlist.push(productId);
+                showToast("Added to wishlist! ❤️", 'success');
+            } else {
+                wishlist.splice(index, 1);
+                showToast("Removed from wishlist", 'info');
+            }
+            localStorage.setItem('farmconnect_wishlist', JSON.stringify(wishlist));
+            displayBuyerProducts();
+            if (document.getElementById('wishlistSection').style.display === 'block') {
+                showWishlist();
+            }
+        }
+
+        function showWishlist() {
+            const wishlistSection = document.getElementById('wishlistSection');
+            const wishlistContainer = document.getElementById('wishlistContainer');
+            
+            const wishlistProducts = allProducts.filter(p => wishlist.includes(p.id) && p.quantity > 0);
+            
+            if (wishlistProducts.length === 0) {
+                wishlistContainer.innerHTML = '<div class="no-data">No items in wishlist. Add some products! ❤️</div>';
+            } else {
+                wishlistContainer.innerHTML = wishlistProducts.map(p => `
+                    <div class="product-card buyer-view">
+                        <div class="product-image">${p.image || '🌾'}</div>
+                        <div class="product-name">${escapeHtml(p.name)}</div>
+                        <div>👨‍🌾 ${escapeHtml(p.farmerName)}</div>
+                        <div><span class="product-price">UGX ${p.price.toLocaleString()}</span> <span class="product-quantity">${p.quantity} ${p.unit} left</span></div>
+                        <button class="buy-btn" onclick="buyProduct('${p.id}')">🛒 Buy Now</button>
+                        <button class="delete-btn" onclick="toggleWishlist('${p.id}')">❤️ Remove</button>
+                    </div>
+                `).join('');
+            }
+            
+            wishlistSection.style.display = wishlistSection.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // ==================== ORDER CANCELLATION ====================
+        function cancelOrder(orderId) {
+            if (confirm("Are you sure you want to cancel this order?")) {
+                const order = allOrders.find(o => o.id === orderId);
+                if (order && order.status === 'pending') {
+                    // Restore product quantity
+                    const product = allProducts.find(p => p.id === order.productId);
+                    if (product) {
+                        product.quantity += order.quantity;
+                    }
+                    order.status = 'cancelled';
+                    saveProducts();
+                    saveOrders();
+                    showToast("Order cancelled successfully!", 'success');
+                    loadBuyerData();
+                    if (currentUser.type === 'farmer') loadFarmerData();
+                } else {
+                    showToast("Cannot cancel this order. Contact farmer directly.", 'error');
+                }
+            }
+        }
+
+        // ==================== DELIVERY TRACKING ====================
+        function getDeliveryTracking(order) {
+            const steps = [
+                { name: "Order Placed", status: "completed" },
+                { name: "Payment Confirmed", status: order.paymentStatus === 'paid' ? "completed" : "pending" },
+                { name: "Processing", status: order.status !== 'pending' ? "completed" : "active" },
+                { name: "Shipped", status: order.status === 'shipped' ? "completed" : order.status === 'delivered' ? "completed" : "pending" },
+                { name: "Out for Delivery", status: order.status === 'delivered' ? "completed" : "pending" },
+                { name: "Delivered", status: order.status === 'delivered' ? "completed" : "pending" }
+            ];
+            
+            return `
+                <div class="delivery-tracking">
+                    ${steps.map((step, i) => `
+                        <div class="tracking-step ${step.status}">
+                            <div class="dot"></div>
+                            <span>${step.name}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // ==================== ANALYTICS CHARTS ====================
+        function initRevenueChart() {
+            const ctx = document.getElementById('revenueChart')?.getContext('2d');
+            if (!ctx) return;
+            
+            // Calculate monthly revenue
+            const monthlyRevenue = [0, 0, 0, 0, 0, 0];
+            allOrders.forEach(order => {
+                if (order.paymentStatus === 'paid') {
+                    const month = new Date(order.orderDate).getMonth();
+                    if (month < 6) monthlyRevenue[month] += order.totalAmount;
+                }
+            });
+            
+            revenueChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Revenue (UGX)',
+                        data: monthlyRevenue,
+                        backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                        borderColor: '#4CAF50',
+                        borderWidth: 2,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true
+                }
+            });
+        }
+
+        function initFarmerSalesChart() {
+            const ctx = document.getElementById('farmerSalesChart')?.getContext('2d');
+            if (!ctx) return;
+            
+            const myOrders = allOrders.filter(o => o.farmerId === currentUser?.id && o.paymentStatus === 'paid');
+            const productSales = {};
+            myOrders.forEach(order => {
+                productSales[order.productName] = (productSales[order.productName] || 0) + order.quantity;
+            });
+            
+            farmerSalesChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(productSales),
+                    datasets: [{
+                        label: 'Units Sold',
+                        data: Object.values(productSales),
+                        backgroundColor: '#4CAF50',
+                        borderColor: '#2E7D32',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true
+                }
+            });
+        }
+
+        // ==================== PRODUCT IMAGE UPLOAD ====================
+        function handleImageUpload(file, callback) {
+            if (!file) {
+                callback(null);
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                callback(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ==================== LOAD/SAVE FUNCTIONS ====================
+        function setupTestAccounts() {
+            const existingUsers = JSON.parse(localStorage.getItem('users') || '[]');
+            if (existingUsers.length === 0) {
+                for (const account of TEST_ACCOUNTS) {
+                    existingUsers.push(account);
+                    if (account.type === 'farmer' && account.products) {
+                        for (const product of account.products) {
+                            product.farmerId = account.id;
+                            product.farmerName = account.name;
+                            allProducts.push(product);
+                        }
+                    }
+                }
+                localStorage.setItem('users', JSON.stringify(existingUsers));
+            }
+        }
 
         function loadAllData() {
+            setupTestAccounts();
             allUsers = JSON.parse(localStorage.getItem('users') || '[]');
             allProducts = JSON.parse(localStorage.getItem('farmconnect_products') || '[]');
             allOrders = JSON.parse(localStorage.getItem('farmconnect_orders') || '[]');
             allMessages = JSON.parse(localStorage.getItem('farmconnect_messages') || '{}');
+            allRatings = JSON.parse(localStorage.getItem('farmconnect_ratings') || '{}');
+            farmAds = JSON.parse(localStorage.getItem('farmconnect_ads') || JSON.stringify(defaultAds));
+            wishlist = JSON.parse(localStorage.getItem('farmconnect_wishlist') || '[]');
             
-            // Add sample products if none exist
             if (allProducts.length === 0) {
                 allProducts = sampleProducts;
                 saveProducts();
@@ -195,105 +1524,341 @@
         function saveOrders() { localStorage.setItem('farmconnect_orders', JSON.stringify(allOrders)); }
         function saveMessages() { localStorage.setItem('farmconnect_messages', JSON.stringify(allMessages)); }
         function saveUsers() { localStorage.setItem('users', JSON.stringify(allUsers)); }
+        function saveRatings() { localStorage.setItem('farmconnect_ratings', JSON.stringify(allRatings)); }
+        function saveAds() { localStorage.setItem('farmconnect_ads', JSON.stringify(farmAds)); }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toastMessage');
+            toast.textContent = message;
+            toast.style.background = type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3';
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 3000);
+        }
+
+        // Smart Farming Functions
+        function showAITips() {
+            alert("🤖 AI Farm Advisor Tips:\n\n🌽 Maize: Plant in March-May. Use 20-25kg seeds per acre.\n🫘 Beans: Plant at 60cm x 15cm spacing.\n🍅 Tomatoes: Water daily, watch for blight.");
+        }
+
+        function showWeatherAlert() {
+            alert("🌤️ Weather Advisory:\n\n📅 Today: Partly cloudy, 24-28°C\n📅 Tomorrow: Light showers expected\n📅 Day 3: Sunny, 26-30°C");
+        }
+
+        function showAflatoxinAlert() {
+            alert("⚠️ Aflatoxin Prevention:\n\n✅ DO: Dry on tarps, use PICS bags\n❌ DON'T: Dry on bare ground, store with >13% moisture");
+        }
+
+        function showCropDoctor() {
+            let symptom = prompt("Describe your crop problem:");
+            if (symptom) {
+                if (symptom.toLowerCase().includes("spot")) alert("Possible Late Blight. Apply copper fungicide.");
+                else if (symptom.toLowerCase().includes("yellow")) alert("Possible nutrient deficiency. Apply NPK fertilizer.");
+                else alert("Contact your local extension worker.");
+            }
+        }
+
+        function showFertilizerCalc() {
+            let acres = parseFloat(prompt("Enter field size (acres):"));
+            if (!isNaN(acres) && acres > 0) {
+                alert(`For ${acres} acre(s) of MAIZE:\n• NPK 17:17:17: ${50 * acres}kg at planting\n• UREA: ${50 * acres}kg top dressing`);
+            }
+        }
+
+        function scrollToProducts() { document.getElementById('farmerProducts').scrollIntoView({ behavior: 'smooth' }); }
+        function scrollToOrders() { document.getElementById('farmerOrders').scrollIntoView({ behavior: 'smooth' }); }
+        function showRevenue() { alert(`💰 Total Revenue: ${document.getElementById('farmerRevenue').textContent}`); }
+
+        function showLoginInfo() {
+            alert("🔐 FarmConnect Test Accounts\n\n" +
+                  "👨‍🌾 FARMER: farmer@farmconnect.com / farmer123\n" +
+                  "🛒 BUYER: buyer@farmconnect.com / buyer123\n" +
+                  "👑 ADMIN: admin@farmconnect.com / admin123");
+        }
+
+        // Profile Functions
+        function editProfile() {
+            const form = document.getElementById('editProfileForm');
+            if (form.style.display === 'none') {
+                document.getElementById('editName').value = currentUser.name || '';
+                document.getElementById('editPhone').value = currentUser.phone || '';
+                document.getElementById('editLocation').value = currentUser.location || 'Kampala, Uganda';
+                form.style.display = 'block';
+            } else {
+                form.style.display = 'none';
+            }
+        }
+
+        function cancelEditProfile() { document.getElementById('editProfileForm').style.display = 'none'; }
+
+        function saveProfile() {
+            currentUser.name = document.getElementById('editName').value;
+            currentUser.phone = document.getElementById('editPhone').value;
+            currentUser.location = document.getElementById('editLocation').value;
+            currentUser.lastActive = new Date().toISOString();
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            const userIndex = allUsers.findIndex(u => u.id === currentUser.id);
+            if (userIndex !== -1) { allUsers[userIndex] = currentUser; saveUsers(); }
+            
+            document.getElementById('userNameDisplay').textContent = currentUser.name;
+            document.getElementById('profileName').textContent = currentUser.name;
+            document.getElementById('profilePhone').textContent = currentUser.phone || '+256 XXX XXX XXX';
+            document.getElementById('profileLocation').textContent = `📍 ${currentUser.location || 'Kampala, Uganda'}`;
+            document.getElementById('editProfileForm').style.display = 'none';
+            showToast("Profile updated successfully!");
+        }
+
+        // Payment Functions
+        function showPaymentModal(orderId, totalAmount) {
+            pendingOrderId = orderId;
+            pendingOrderTotal = totalAmount;
+            document.getElementById('paymentAmount').innerHTML = `UGX ${totalAmount.toLocaleString()}`;
+            document.getElementById('paymentModal').style.display = 'flex';
+            document.getElementById('paymentPhoneInput').style.display = 'none';
+            selectedPaymentMethod = null;
+            document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('selected'));
+        }
+
+        function selectPaymentMethod(method) {
+            selectedPaymentMethod = method;
+            document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('selected'));
+            if (method === 'mobile_money') {
+                document.getElementById('mobileMoneyPayment').classList.add('selected');
+                document.getElementById('paymentPhoneInput').style.display = 'block';
+            } else {
+                document.getElementById('cardPayment').classList.add('selected');
+                document.getElementById('paymentPhoneInput').style.display = 'none';
+            }
+        }
+
+        function processMobilePayment() {
+            const phone = document.getElementById('paymentPhone').value;
+            if (!phone) { showToast("Please enter phone number", 'error'); return; }
+            
+            showToast(`📱 Payment of UGX ${pendingOrderTotal.toLocaleString()} initiated.`, 'success');
+            
+            setTimeout(() => {
+                const order = allOrders.find(o => o.id === pendingOrderId);
+                if (order) {
+                    order.paymentStatus = 'paid';
+                    saveOrders();
+                    showToast("✅ Payment successful! Order confirmed.", 'success');
+                    sendNotification("Payment Received", `Your payment of UGX ${pendingOrderTotal.toLocaleString()} was successful.`);
+                    closePaymentModal();
+                    if (currentUser.type === 'buyer') loadBuyerData();
+                    if (currentUser.type === 'farmer') loadFarmerData();
+                    resetSessionTimer();
+                }
+            }, 1500);
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').style.display = 'none';
+            pendingOrderId = null;
+        }
 
         function checkAuth() {
             const userJson = localStorage.getItem('currentUser');
-            if (!userJson) { 
-                // Create a test user if none exists for demo
-                const testUser = { id: "farmer1", name: "John Mubiru", email: "farmer@farmconnect.com", type: "farmer", subscription: { active: true, expiryDate: new Date(Date.now() + 30*86400000).toISOString() } };
-                localStorage.setItem('currentUser', JSON.stringify(testUser));
-                currentUser = testUser;
+            if (!userJson) {
+                const defaultFarmer = TEST_ACCOUNTS.find(a => a.email === 'farmer@farmconnect.com');
+                localStorage.setItem('currentUser', JSON.stringify(defaultFarmer));
+                currentUser = defaultFarmer;
             } else {
                 currentUser = JSON.parse(userJson);
             }
             
-            document.getElementById('userNameDisplay').textContent = currentUser.name || currentUser.email;
+            // Request notification permission
+            requestNotificationPermission();
+            
+            // Start session timer
+            startSessionTimer();
+            
+            // Update last active
+            currentUser.lastActive = new Date().toISOString();
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            document.getElementById('userNameDisplay').textContent = currentUser.name;
+            document.getElementById('profileName').textContent = currentUser.name;
+            document.getElementById('profileEmail').textContent = currentUser.email;
+            document.getElementById('profilePhone').textContent = currentUser.phone || '+256 XXX XXX XXX';
+            document.getElementById('profileLocation').textContent = `📍 ${currentUser.location || 'Kampala, Uganda'}`;
+            
+            if (currentUser.verified) {
+                document.getElementById('profileVerified').textContent = "✅ Email Verified";
+                document.getElementById('verifiedBadge').style.display = 'flex';
+            }
+            
             const typeBadge = document.getElementById('userTypeBadge');
             const modeBadge = document.getElementById('modeBadge');
+            const profileAvatar = document.getElementById('profileAvatar');
             
             if (currentUser.type === 'farmer') {
                 typeBadge.textContent = '👨‍🌾 Farmer Account';
                 modeBadge.textContent = '👨‍🌾 Farmer Mode';
+                profileAvatar.textContent = '👨‍🌾';
+                document.getElementById('farmerDashboard').style.display = 'block';
+                document.getElementById('buyerDashboard').style.display = 'none';
+                document.getElementById('wishlistSection').style.display = 'none';
+                loadFarmerData();
+                initFarmerSalesChart();
             } else if (currentUser.type === 'buyer') {
                 typeBadge.textContent = '🛒 Buyer Account';
                 typeBadge.classList.add('buyer');
                 modeBadge.textContent = '🛒 Buyer Mode';
                 modeBadge.classList.add('buyer');
-            }
-
-            // Show the appropriate dashboard
-            if (currentUser.type === 'farmer') {
-                document.getElementById('farmerDashboard').style.display = 'block';
-                document.getElementById('buyerDashboard').style.display = 'none';
-                loadFarmerData();
-            } else if (currentUser.type === 'buyer') {
+                profileAvatar.textContent = '🛒';
                 document.getElementById('farmerDashboard').style.display = 'none';
                 document.getElementById('buyerDashboard').style.display = 'block';
+                document.getElementById('wishlistSection').style.display = 'none';
                 loadBuyerData();
+            } else if (currentUser.type === 'authority') {
+                typeBadge.textContent = '👑 Authority';
+                typeBadge.classList.add('authority');
+                profileAvatar.textContent = '👑';
+                showAuthorityDashboard();
             }
-            
+
             displayFeaturedAd();
             displayPartnerAds();
         }
 
-        function renewSubscription() { alert("Redirect to payment page"); }
+        function renewSubscription() { 
+            showToast("Redirecting to payment page...", 'info'); 
+            setTimeout(() => { window.location.href = 'payment.html?renew=true'; }, 1500); 
+        }
 
+        // Farmer Functions
         function loadFarmerData() {
             const myProducts = allProducts.filter(p => p.farmerId === currentUser.id);
             document.getElementById('farmerProductsCount').textContent = myProducts.length;
             const myOrders = allOrders.filter(o => o.farmerId === currentUser.id);
             document.getElementById('farmerOrdersCount').textContent = myOrders.length;
-            const revenue = myOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+            const revenue = myOrders.reduce((sum, o) => sum + (o.paymentStatus === 'paid' ? o.totalAmount : 0), 0);
             document.getElementById('farmerRevenue').textContent = `UGX ${revenue.toLocaleString()}`;
             displayFarmerProducts(myProducts);
             displayFarmerOrders(myOrders);
+            if (farmerSalesChart) {
+                farmerSalesChart.destroy();
+                initFarmerSalesChart();
+            }
         }
 
         function displayFarmerProducts(products) {
             const container = document.getElementById('farmerProducts');
             if (!products.length) { container.innerHTML = '<div class="no-data">No products yet. Add your first product above! 🌾</div>'; return; }
-            container.innerHTML = products.map(p => `<div class="product-card farmer-view"><div class="product-name">${escapeHtml(p.name)}</div><div>${escapeHtml(p.description)}</div><div><span class="product-price">UGX ${p.price.toLocaleString()}</span> <span class="product-quantity">${p.quantity} ${p.unit}</span></div><div><button class="edit-btn" onclick="editProduct('${p.id}')">✏️ Edit</button> <button class="delete-btn" onclick="deleteProduct('${p.id}')">🗑️ Delete</button></div></div>`).join('');
+            container.innerHTML = products.map(p => `
+                <div class="product-card farmer-view">
+                    <div class="product-image">${p.imageData ? `<img src="${p.imageData}" style="width:100%; height:150px; object-fit:cover; border-radius:10px;">` : (p.image || '🌾')}</div>
+                    <div class="product-name">${escapeHtml(p.name)}</div>
+                    <div>${escapeHtml(p.description)}</div>
+                    <div><span class="product-price">UGX ${p.price.toLocaleString()}</span> <span class="product-quantity">${p.quantity} ${p.unit}</span></div>
+                    <div><button class="edit-btn" onclick="editProduct('${p.id}')">✏️ Edit</button> <button class="delete-btn" onclick="deleteProduct('${p.id}')">🗑️ Delete</button></div>
+                </div>
+            `).join('');
         }
 
         function displayFarmerOrders(orders) {
             const container = document.getElementById('farmerOrders');
             if (!orders.length) { container.innerHTML = '<div class="no-data">No orders yet.</div>'; return; }
-            container.innerHTML = orders.map(o => `<div class="order-card" onclick="openChatForOrder('${o.id}', '${o.buyerId}', '${escapeHtml(o.buyerName)}', '${escapeHtml(o.productName)}')"><div><strong>Buyer:</strong> ${escapeHtml(o.buyerName)}</div><div><strong>Product:</strong> ${escapeHtml(o.productName)} x${o.quantity} = UGX ${o.totalAmount.toLocaleString()}</div><div><small>✉️ Click to chat</small></div></div>`).join('');
+            container.innerHTML = orders.map(o => `
+                <div class="order-card" onclick="openChatForOrder('${o.id}', '${o.buyerId}', '${escapeHtml(o.buyerName)}', '${escapeHtml(o.productName)}')">
+                    <div><strong>Buyer:</strong> ${escapeHtml(o.buyerName)} | <span class="order-status status-${o.status}">${o.status}</span> ${o.paymentStatus === 'paid' ? '<span class="payment-status payment-paid">Paid</span>' : '<span class="payment-status payment-pending">Pending</span>'}</div>
+                    <div><strong>Product:</strong> ${escapeHtml(o.productName)} | <strong>Qty:</strong> ${o.quantity} ${o.unit}</div>
+                    <div><strong>Total:</strong> UGX ${o.totalAmount.toLocaleString()}</div>
+                    <div><strong>Delivery:</strong> ${o.deliveryAddress || 'Not specified'}</div>
+                    ${o.status === 'pending' && o.paymentStatus === 'paid' ? `<button class="mark-shipped-btn" onclick="event.stopPropagation(); updateOrderStatus('${o.id}', 'shipped')">🚚 Mark as Shipped</button>` : ''}
+                    <div><small>✉️ Click to chat with buyer</small></div>
+                </div>
+            `).join('');
+        }
+
+        function updateOrderStatus(orderId, newStatus) {
+            const order = allOrders.find(o => o.id === orderId);
+            if (order) { 
+                order.status = newStatus; 
+                saveOrders(); 
+                loadFarmerData(); 
+                showToast(`Order marked as ${newStatus}!`, 'success');
+                sendNotification("Order Updated", `Your order #${orderId.slice(-6)} has been ${newStatus}.`);
+                resetSessionTimer();
+            }
         }
 
         function addProduct(e) {
             e.preventDefault();
-            allProducts.push({
-                id: 'prod_' + Date.now(),
-                farmerId: currentUser.id,
-                farmerName: currentUser.name,
-                name: document.getElementById('productName').value,
-                category: document.getElementById('productCategory').value,
-                description: document.getElementById('productDescription').value,
-                price: parseInt(document.getElementById('productPrice').value),
-                quantity: parseInt(document.getElementById('productQuantity').value),
-                unit: document.getElementById('productUnit').value
-            });
-            saveProducts();
-            loadFarmerData();
-            document.getElementById('addProductForm').reset();
-            alert('✅ Product added!');
+            const imageFile = document.getElementById('productImage').files[0];
+            
+            const processAdd = (imageData) => {
+                allProducts.push({
+                    id: 'prod_' + Date.now(), farmerId: currentUser.id, farmerName: currentUser.name,
+                    name: document.getElementById('productName').value, category: document.getElementById('productCategory').value,
+                    description: document.getElementById('productDescription').value, price: parseInt(document.getElementById('productPrice').value),
+                    quantity: parseInt(document.getElementById('productQuantity').value), unit: document.getElementById('productUnit').value, 
+                    image: imageData ? null : '🌾', imageData: imageData || null, rating: 0
+                });
+                saveProducts(); 
+                loadFarmerData(); 
+                document.getElementById('addProductForm').reset(); 
+                showToast("Product added successfully!", 'success');
+                resetSessionTimer();
+            };
+            
+            if (imageFile) {
+                handleImageUpload(imageFile, processAdd);
+            } else {
+                processAdd(null);
+            }
         }
 
-        function editProduct(id) { const p = allProducts.find(p => p.id === id); if(p){ const newPrice = prompt('New price:', p.price); if(newPrice){ p.price = parseInt(newPrice); saveProducts(); loadFarmerData(); alert('✅ Updated!'); } } }
-        function deleteProduct(id) { if(confirm('Delete?')){ allProducts = allProducts.filter(p => p.id !== id); saveProducts(); loadFarmerData(); alert('✅ Deleted!'); } }
+        function editProduct(id) { 
+            const p = allProducts.find(p => p.id === id); 
+            if(p){ 
+                const newPrice = prompt('Enter new price (UGX):', p.price); 
+                if(newPrice){ 
+                    p.price = parseInt(newPrice); 
+                    saveProducts(); 
+                    loadFarmerData(); 
+                    showToast("Product updated!", 'success');
+                    resetSessionTimer();
+                } 
+            } 
+        }
+        
+        function deleteProduct(id) { 
+            if(confirm('Delete this product?')){ 
+                allProducts = allProducts.filter(p => p.id !== id); 
+                saveProducts(); 
+                loadFarmerData(); 
+                showToast("Product deleted!", 'success');
+                resetSessionTimer();
+            } 
+        }
 
-        function loadBuyerData() { displayBuyerProducts(); displayBuyerOrders(); }
+        // Buyer Functions
+        function loadBuyerData() { 
+            displayBuyerProducts(); 
+            displayBuyerOrders(); 
+        }
 
         function displayBuyerProducts() {
             let filtered = allProducts.filter(p => p.quantity > 0);
             const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
             const cat = document.getElementById('categoryFilter')?.value || '';
-            if(search) filtered = filtered.filter(p => p.name.toLowerCase().includes(search));
+            if(search) filtered = filtered.filter(p => p.name.toLowerCase().includes(search) || p.farmerName.toLowerCase().includes(search));
             if(cat) filtered = filtered.filter(p => p.category === cat);
             const container = document.getElementById('buyerProducts');
-            if(!filtered.length){ container.innerHTML = '<div class="no-data">No products available.</div>'; return; }
-            container.innerHTML = filtered.map(p => `<div class="product-card buyer-view"><div class="product-name">${escapeHtml(p.name)}</div><div>👨‍🌾 ${escapeHtml(p.farmerName)}</div><div>${escapeHtml(p.description)}</div><div><span class="product-price">UGX ${p.price.toLocaleString()}</span> <span class="product-quantity">${p.quantity} ${p.unit}</span></div><button class="buy-btn" onclick="buyProduct('${p.id}')">🛒 Buy Now</button></div>`).join('');
+            if(!filtered.length){ container.innerHTML = '<div class="no-data">No products available. Check back later! 🛒</div>'; return; }
+            container.innerHTML = filtered.map(p => `
+                <div class="product-card buyer-view">
+                    <span class="wishlist-icon ${wishlist.includes(p.id) ? 'active' : ''}" onclick="event.stopPropagation(); toggleWishlist('${p.id}')">${wishlist.includes(p.id) ? '❤️' : '🤍'}</span>
+                    <div class="product-image">${p.imageData ? `<img src="${p.imageData}" style="width:100%; height:150px; object-fit:cover; border-radius:10px;">` : (p.image || '🌾')}</div>
+                    <div class="product-name">${escapeHtml(p.name)}</div>
+                    <div>👨‍🌾 ${escapeHtml(p.farmerName)}</div>
+                    <div>${escapeHtml(p.description)}</div>
+                    <div><span class="product-price">UGX ${p.price.toLocaleString()}</span> <span class="product-quantity">${p.quantity} ${p.unit} left</span></div>
+                    <button class="buy-btn" onclick="buyProduct('${p.id}')">🛒 Buy Now</button>
+                </div>
+            `).join('');
         }
 
         function filterProducts() { displayBuyerProducts(); }
@@ -301,42 +1866,62 @@
         function buyProduct(productId) {
             const product = allProducts.find(p => p.id === productId);
             if(!product) return;
-            let qty = parseInt(prompt(`Quantity (max ${product.quantity}):`, '1'));
-            if(isNaN(qty) || qty < 1 || qty > product.quantity) { alert('Invalid!'); return; }
+            let qty = parseInt(prompt(`Enter quantity (max ${product.quantity} ${product.unit}):`, '1'));
+            if(isNaN(qty) || qty < 1 || qty > product.quantity) { alert('Invalid quantity!'); return; }
+            let deliveryAddress = prompt("Enter your delivery address:", currentUser.location || "Kampala, Uganda");
+            if(!deliveryAddress) return;
             let total = product.price * qty;
-            if(confirm(`Order: ${product.name} x${qty} = UGX ${total}?`)){
+            if(confirm(`Order Summary:\nProduct: ${product.name}\nQuantity: ${qty} ${product.unit}\nTotal: UGX ${total.toLocaleString()}\nDelivery to: ${deliveryAddress}\n\nConfirm order?`)){
                 const order = {
-                    id: 'ord_' + Date.now(),
-                    productId: product.id,
-                    productName: product.name,
-                    farmerId: product.farmerId,
-                    farmerName: product.farmerName,
-                    buyerId: currentUser.id,
-                    buyerName: currentUser.name,
-                    quantity: qty,
-                    unit: product.unit,
-                    price: product.price,
-                    totalAmount: total,
-                    status: 'pending',
-                    orderDate: new Date().toISOString()
+                    id: 'ord_' + Date.now(), productId: product.id, productName: product.name,
+                    farmerId: product.farmerId, farmerName: product.farmerName,
+                    buyerId: currentUser.id, buyerName: currentUser.name,
+                    quantity: qty, unit: product.unit, price: product.price, totalAmount: total,
+                    status: 'pending', paymentStatus: 'pending', deliveryAddress: deliveryAddress, orderDate: new Date().toISOString()
                 };
                 product.quantity -= qty;
                 if(product.quantity === 0) allProducts = allProducts.filter(p => p.id !== product.id);
                 allOrders.push(order);
                 saveProducts(); saveOrders();
-                alert(`✅ Order placed! UGX ${total}`);
+                showToast(`Order placed! Total: UGX ${total.toLocaleString()}. Please complete payment.`, 'success');
+                sendNotification("New Order", `Your order #${order.id.slice(-6)} has been placed.`);
                 loadBuyerData();
-                openChatForOrder(order.id, order.farmerId, order.farmerName, order.productName);
+                showPaymentModal(order.id, total);
+                resetSessionTimer();
             }
         }
 
         function displayBuyerOrders() {
             const myOrders = allOrders.filter(o => o.buyerId === currentUser.id);
             const container = document.getElementById('buyerOrders');
-            if(!myOrders.length){ container.innerHTML = '<div class="no-data">No orders yet.</div>'; return; }
-            container.innerHTML = myOrders.map(o => `<div class="order-card" onclick="openChatForOrder('${o.id}', '${o.farmerId}', '${escapeHtml(o.farmerName)}', '${escapeHtml(o.productName)}')"><div><strong>From:</strong> ${escapeHtml(o.farmerName)}</div><div><strong>Product:</strong> ${escapeHtml(o.productName)} x${o.quantity} = UGX ${o.totalAmount.toLocaleString()}</div><div><small>✉️ Click to chat</small></div></div>`).join('');
+            if(!myOrders.length){ container.innerHTML = '<div class="no-data">No orders yet. Start shopping! 🛒</div>'; return; }
+            container.innerHTML = myOrders.map(o => `
+                <div class="order-card" onclick="openChatForOrder('${o.id}', '${o.farmerId}', '${escapeHtml(o.farmerName)}', '${escapeHtml(o.productName)}')">
+                    <div><strong>From:</strong> ${escapeHtml(o.farmerName)} | <span class="order-status status-${o.status}">${o.status}</span> ${o.paymentStatus === 'paid' ? '<span class="payment-status payment-paid">Paid</span>' : '<span class="payment-status payment-pending">Pending Payment</span>'}</div>
+                    <div><strong>Product:</strong> ${escapeHtml(o.productName)} | <strong>Qty:</strong> ${o.quantity} ${o.unit}</div>
+                    <div><strong>Total:</strong> UGX ${o.totalAmount.toLocaleString()}</div>
+                    <div><strong>Delivery to:</strong> ${o.deliveryAddress || 'Not specified'}</div>
+                    ${getDeliveryTracking(o)}
+                    ${o.paymentStatus !== 'paid' ? `<button class="pay-now-btn" onclick="event.stopPropagation(); showPaymentModal('${o.id}', ${o.totalAmount})">💰 Pay Now</button>` : ''}
+                    ${o.status === 'pending' ? `<button class="cancel-order-btn" onclick="event.stopPropagation(); cancelOrder('${o.id}')">❌ Cancel Order</button>` : ''}
+                    ${o.status === 'delivered' && !allRatings[o.id] ? `<button class="rate-btn" onclick="event.stopPropagation(); rateOrder('${o.id}', '${o.farmerId}', '${o.productName}')">⭐ Rate this order</button>` : ''}
+                    <div><small>✉️ Click to chat with farmer</small></div>
+                </div>
+            `).join('');
         }
 
+        function rateOrder(orderId, farmerId, productName) {
+            let rating = prompt(`Rate your experience for ${productName}\n\n1-Poor 2-Fair 3-Good 4-Very Good 5-Excellent\n\nEnter rating (1-5):`);
+            if(rating && rating >= 1 && rating <= 5) {
+                allRatings[orderId] = { rating: parseInt(rating), farmerId: farmerId, productName: productName, date: new Date().toISOString() };
+                saveRatings();
+                showToast(`Thank you for rating ${productName} ${rating} stars! ⭐`, 'success');
+                loadBuyerData();
+                resetSessionTimer();
+            }
+        }
+
+        // Chat Functions (same as before, kept for brevity)
         function openChatForOrder(orderId, otherUserId, otherUserName, productName) {
             currentChatOrder = { orderId, otherUserId, otherUserName, productName };
             document.getElementById('orderInfoPreview').innerHTML = `📦 Order #${orderId.slice(-6)} | ${productName} | Chat with ${escapeHtml(otherUserName)}`;
@@ -348,7 +1933,14 @@
             const messages = allMessages[orderId] || [];
             const container = document.getElementById('chatMessages');
             if(!messages.length){ container.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">💬 No messages yet.</div>'; return; }
-            container.innerHTML = messages.map(msg => `<div class="message ${msg.senderId === currentUser.id ? 'sent' : 'received'}"><div>${escapeHtml(msg.content)}</div><small>${new Date(msg.timestamp).toLocaleTimeString()}</small></div>`).join('');
+            container.innerHTML = messages.map(msg => {
+                if(msg.type === 'text'){
+                    return `<div class="message ${msg.senderId === currentUser.id ? 'sent' : 'received'}"><div>${escapeHtml(msg.content)}</div><small>${new Date(msg.timestamp).toLocaleTimeString()}</small></div>`;
+                } else if(msg.type === 'audio'){
+                    return `<div class="message ${msg.senderId === currentUser.id ? 'sent' : 'received'} audio"><div>🎤 Voice message:</div><audio controls class="audio-player" src="${msg.content}"></audio><small>${new Date(msg.timestamp).toLocaleTimeString()}</small></div>`;
+                }
+                return '';
+            }).join('');
             container.scrollTop = container.scrollHeight;
         }
 
@@ -362,7 +1954,9 @@
             loadChatMessages(currentChatOrder.orderId);
             input.value = '';
             document.getElementById('chatNotification').style.display = 'flex';
+            sendNotification("New Message", `You have a new message from ${currentUser.name}`);
             setTimeout(() => document.getElementById('chatNotification').style.display = 'none', 3000);
+            resetSessionTimer();
         }
 
         function requestVoicePermission() {
@@ -417,13 +2011,59 @@
         function closeChat() { document.getElementById('chatContainer').style.display = 'none'; currentChatOrder = null; }
         function openChatFromNotification() { if(currentChatOrder) document.getElementById('chatContainer').style.display = 'flex'; document.getElementById('chatNotification').style.display = 'none'; }
 
-        function displayFeaturedAd() { document.getElementById('featuredAdContainer').innerHTML = `<div class="featured-ad"><div class="ad-icon-large">🚜</div><div class="ad-title">AgriTech Solutions</div><div class="ad-offer">20% OFF</div><div class="ad-description">GPS navigation farming equipment</div><button class="ad-shop-btn">Shop Now</button></div>`; }
-        function displayPartnerAds() { document.getElementById('sidebarAdsContainer').innerHTML = `<div class="partner-ads-section"><div class="section-header"><h3>🤝 Partner Offers</h3><span class="advertiser-link" onclick="alert('Contact ads@farmconnect.com')">Advertise Here</span></div><div class="ads-grid"><div class="partner-ad-card"><div class="ad-product-icon">🌱</div><div class="ad-company">GreenGro</div><div class="ad-product-name">Organic Fertilizer</div><div class="ad-discount">Buy 2 Get 1 Free</div></div><div class="partner-ad-card"><div class="ad-product-icon">🛡️</div><div class="ad-company">FarmGuard</div><div class="ad-product-name">Crop Insurance</div><div class="ad-discount">First Month FREE</div></div></div></div>`; }
+        // Authority Functions
+        function showAuthorityDashboard() {
+            document.getElementById('authorityDashboard').style.display = 'block';
+            document.getElementById('appContent').style.display = 'none';
+            let revenue = 0, subs = 0;
+            allUsers.forEach(u => { if(u.subscription?.active && new Date(u.subscription.expiryDate) > new Date()) { subs++; revenue += 5000; } });
+            document.getElementById('totalRevenue').textContent = `UGX ${revenue.toLocaleString()}`;
+            document.getElementById('activeSubscriptions').textContent = subs;
+            document.getElementById('totalUsers').textContent = allUsers.length;
+            
+            initRevenueChart();
+            
+            const pending = allUsers.filter(u => u.status === 'pending');
+            document.getElementById('pendingUsersList').innerHTML = pending.map(u => `<div class="user-card"><div><strong>${escapeHtml(u.name)}</strong> (${u.type})</div><div>📧 ${u.email}</div><div><button class="approve-btn" onclick="approveUser('${u.id}')">Approve</button><button class="reject-btn" onclick="rejectUser('${u.id}')">Reject</button></div></div>`).join('') || '<div class="no-data">No pending users</div>';
+            
+            const farmers = allUsers.filter(u => u.status === 'approved' && u.type === 'farmer');
+            document.getElementById('activeFarmersList').innerHTML = farmers.map(u => `<div class="user-card farmer"><div><strong>${escapeHtml(u.name)}</strong></div><div>📧 ${u.email}</div><div>Last active: ${new Date(u.lastActive).toLocaleDateString() || 'N/A'}</div><div><button class="remove-btn" onclick="removeUser('${u.id}')">Remove</button></div></div>`).join('') || '<div class="no-data">No farmers</div>';
+            
+            const buyers = allUsers.filter(u => u.status === 'approved' && u.type === 'buyer');
+            document.getElementById('activeBuyersList').innerHTML = buyers.map(u => `<div class="user-card buyer"><div><strong>${escapeHtml(u.name)}</strong></div><div>📧 ${u.email}</div><div>Last active: ${new Date(u.lastActive).toLocaleDateString() || 'N/A'}</div><div><button class="remove-btn" onclick="removeUser('${u.id}')">Remove</button></div></div>`).join('') || '<div class="no-data">No buyers</div>';
+            
+            document.getElementById('adsManagementList').innerHTML = farmAds.map(ad => `<div class="user-card"><div><strong>${ad.company}</strong></div><div>${ad.product} - ${ad.discount}</div><div><button class="approve-btn" onclick="toggleAdFeatured('${ad.id}')">${ad.featured ? 'Remove Featured' : 'Make Featured'}</button><button class="remove-btn" onclick="deleteAd('${ad.id}')">Delete</button></div></div>`).join('');
+        }
+
+        function approveUser(id) { const u = allUsers.find(u=>u.id===id); if(u){ u.status='approved'; saveUsers(); showAuthorityDashboard(); showToast(`✅ ${u.name} approved!`, 'success'); sendNotification("Account Approved", `Your FarmConnect account has been approved!`); } }
+        function rejectUser(id) { allUsers = allUsers.filter(u=>u.id!==id); saveUsers(); showAuthorityDashboard(); showToast(`❌ User rejected`, 'error'); }
+        function removeUser(id) { if(confirm('Remove user?')){ allUsers = allUsers.filter(u=>u.id!==id); saveUsers(); showAuthorityDashboard(); } }
+        function toggleAdFeatured(id) { const ad = farmAds.find(a=>a.id===id); if(ad){ ad.featured = !ad.featured; saveAds(); showAuthorityDashboard(); displayFeaturedAd(); } }
+        function deleteAd(id) { farmAds = farmAds.filter(a=>a.id!==id); saveAds(); showAuthorityDashboard(); displayFeaturedAd(); displayPartnerAds(); }
+
+        // Advertisement Functions
+        function displayFeaturedAd() {
+            const featured = farmAds.find(ad => ad.featured);
+            if(featured) document.getElementById('featuredAdContainer').innerHTML = `<div class="featured-ad"><div class="ad-icon-large">${featured.icon}</div><div class="ad-title">${featured.company}</div><div class="ad-offer">🔥 ${featured.discount}</div><div class="ad-description">${featured.description}</div><button class="ad-shop-btn" onclick="showToast('Contact ${featured.company} at ads@farmconnect.com')">Shop Now →</button></div>`;
+        }
+
+        function displayPartnerAds() {
+            document.getElementById('sidebarAdsContainer').innerHTML = `<div class="partner-ads-section"><div class="section-header"><h3>🤝 Partner Offers</h3><span class="advertiser-link" onclick="alert('📢 Advertise with us!\n\nContact: ads@farmconnect.com')">Advertise Here →</span></div><div class="ads-grid">${farmAds.slice(0,3).map(ad => `<div class="partner-ad-card"><div class="ad-product-icon">${ad.icon}</div><div class="ad-company">${ad.company}</div><div class="ad-product-name">${ad.product}</div><div class="ad-discount">${ad.discount}</div><button class="ad-view-btn" onclick="showToast('Contact ${ad.company} for more info')">View Offer →</button></div>`).join('')}</div></div>`;
+        }
 
         function escapeHtml(text) { if(!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
-        function logout() { localStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
+        
+        function logout() { 
+            clearInterval(sessionTimerInterval);
+            localStorage.removeItem('currentUser'); 
+            window.location.href = 'index.html'; 
+        }
 
-        window.onload = function() { loadAllData(); checkAuth(); };
+        // Initialize
+        window.onload = function() { 
+            loadAllData(); 
+            checkAuth(); 
+        };
     </script>
 </body>
 </html>
