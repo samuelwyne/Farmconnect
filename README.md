@@ -526,7 +526,7 @@ This project is proprietary and confidential. Unauthorized copying, distribution
 Channel Information
 Email samuelsekasi201@gmail.com
 Phone +256749140861
-Website https://farmconnect.com
+Website:https://sparkly-cheesecake-b1e81b.netlify.app/
 Address Kampala, Uganda
 
 Support Hours
